@@ -2,78 +2,96 @@
 #include <iostream>
 #include <vector>
 
-using namespace paras;  
+using namespace std;
+using namespace paras;
 
 int main() {
-    // Take width and height input from user (static for now)
-    size_t width = 3, height = 3;
+    size_t width, height;
 
-    // Initialize the image vector with sequential values
-    std::vector<int> image(width * height);
-    for (size_t i = 0; i < width * height; ++i) {
+    cout << "============================================\n";
+    cout << "  CONVOLUTION USING SYCL\n";
+    cout << "============================================\n";
+    cout << "Enter width : ";
+    cin >> width;
+    cout << "Enter height: ";
+    cin >> height;
+    cout << "--------------------------------------------\n";
+
+    // Initialize image matrix
+    vector<int> image(width * height);
+    for (size_t i = 0; i < width * height; ++i)
         image[i] = i + 1;
-    }
 
     // Sobel kernel (horizontal edge detection)
-    const std::vector<int> kernel = {
-        1, 0, -1,
-        2, 0, -2,
-        1, 0, -1
+    const vector<int> kernel = {
+         1,  0, -1,
+         2,  0, -2,
+         1,  0, -1
     };
 
-    // Result vector initialized to zero
-    std::vector<int> result(width * height, 0);
+    vector<int> result(width * height, 0);
 
-    // Create a SYCL queue
+    // SYCL queue
     sycl::queue queue{sycl::default_selector{}};
+    cout << "SYCL Device Used: "
+         << queue.get_device().get_info<sycl::info::device::name>()
+         << "\n--------------------------------------------\n";
 
-    std::cout << "SYCL device: " 
-              << queue.get_device().get_info<sycl::info::device::name>() 
-              << std::endl;
-
-    // Create buffers
+    // Buffers
     sycl::buffer<int> imageBuffer(image.data(), sycl::range<1>(width * height));
     sycl::buffer<int> kernelBuffer(kernel.data(), sycl::range<1>(3 * 3));
     sycl::buffer<int> resultBuffer(result.data(), sycl::range<1>(width * height));
 
-    // Submit the kernel
+    // Submit kernel
     queue.submit([&](sycl::handler& cgh) {
-        auto imageAccessor = imageBuffer.get_access<sycl::access::mode::read>(cgh);
-        auto kernelAccessor = kernelBuffer.get_access<sycl::access::mode::read>(cgh);
-        auto resultAccessor = resultBuffer.get_access<sycl::access::mode::write>(cgh);
+        auto imageAcc  = imageBuffer.get_access<sycl::access::mode::read>(cgh);
+        auto kernelAcc = kernelBuffer.get_access<sycl::access::mode::read>(cgh);
+        auto resultAcc = resultBuffer.get_access<sycl::access::mode::write>(cgh);
 
-        cgh.parallel_for<class image_convolution>(
-            sycl::range<2>({width, height}),
+        cgh.parallel_for<class sobel_filter>(
+            sycl::range<2>(width, height),
             [=](sycl::item<2> item) {
                 int sum = 0;
                 for (int kx = -1; kx <= 1; ++kx) {
                     for (int ky = -1; ky <= 1; ++ky) {
-                        int imageX = item[0] + kx;
-                        int imageY = item[1] + ky;
-                        if (imageX >= 0 && imageX < width && imageY >= 0 && imageY < height) {
-                            sum += imageAccessor[imageX * width + imageY] *
-                                   kernelAccessor[(kx + 1) * 3 + (ky + 1)];
+                        int x = item[0] + kx;
+                        int y = item[1] + ky;
+
+                        if (x >= 0 && x < width && y >= 0 && y < height) {
+                            int imageIndex = x * width + y;
+                            int kernelIndex = (kx + 1) * 3 + (ky + 1);
+                            sum += imageAcc[imageIndex] * kernelAcc[kernelIndex];
                         }
                     }
                 }
-                resultAccessor[item[0] * width + item[1]] = sum;
+                resultAcc[item[0] * width + item[1]] = sum;
             });
     });
 
-    // Wait for the queue to finish
     queue.wait();
 
-    // Access and print the result
-    auto resultBuffer_host = resultBuffer.get_access<sycl::access::mode::read>();
+    // Access result
+    auto hostResult = resultBuffer.get_access<sycl::access::mode::read>();
 
-    std::cout << "Convolution Result:" << std::endl;
+    // Display original image
+    cout << "Image Matrix:\n";
     for (size_t i = 0; i < height; ++i) {
-        for (size_t j = 0; j < width; ++j) {
-            std::cout << resultBuffer_host[i * width + j] << " ";
-        }
-        std::cout << std::endl;
+        cout << "\t";
+        for (size_t j = 0; j < width; ++j)
+            cout << image[i * width + j] << "\t";
+        cout << "\n";
     }
 
+    // Display result
+    cout << "\nSobel Convolution Result:\n";
+    for (size_t i = 0; i < height; ++i) {
+        cout << "\t";
+        for (size_t j = 0; j < width; ++j)
+            cout << hostResult[i * width + j] << "\t";
+        cout << "\n";
+    }
+
+    cout << "============================================\n";
     return 0;
 }
 
