@@ -9,9 +9,9 @@ Description: Compute dot product of two vectors
 
 Sample Output:
 
-![](/assets/dot_product_output_cpu.png)
+![Dot_Product_Output_For_CPU](/assets/dot_product_output_cpu.png)
 
-![](/assets/dot_product_output_gpu.png)
+![Dot_Product_Output_For_GPU](/assets/dot_product_output_gpu.png)
 
 ## [Matrix Multiplication](matrix_multiplication.cpp)
 
@@ -19,7 +19,9 @@ Sample Output:
 
 **Sample Output:**
 
-![](/assets/matrix_multiplication_output_cpu.png)
+![Matrix_Multiplication_Output_For_CPU](/assets/matrix_multiplication_output_cpu.png)
+
+![Matrix_Multiplication_Output_For_GPU](/assets/matrix_multiplication_output_gpu.png)
 
 ## [Vector Addition](vector_addition.cpp)
 
@@ -27,7 +29,10 @@ Sample Output:
 
 **Sample Output**
 
-![](/assets/vector_addition_output.png)
+![Vector_Addition_Output_For_CPU](/assets/vector_addition_output_cpu.png)
+
+![Vector_Addition_Output_For_GPU](/assets/vector_addition_output_gpu.png)
+
 
 ## [PI Calculation](pi_calculation.cpp)
 
@@ -35,23 +40,28 @@ Sample Output:
 
 **Sample Output**
 
-![](/assets/pi_calculation_output.png)
+![PI_Calculation_Output_For_CPU](/assets/pi_calculation_output_cpu.png)
+
+![PI_Calculation_Output_For_GPU](/assets/pi_calculation_output_gpu.png)
 
 
 ## Heat Equation
 
-**Description:** Calculate the heat transfer 
+**Description:** Calculate the heat transfer Equation using sycl
 
 **Sample Output**
 
 ![Heat equation output for CPU](/assets/heat_equation_output_cpu.png)
+
 ![Heat equation output for GPU](/assets/heat_equation_output_gpu.png)
 
 ## Convolution
 
-**Description:** Convolution
+**Description:** This code computes the convolution using sycl
 
 **Sample Output**
 
-![Convolution output](/assets/convolution_output.png)
+![Convolution output_For_CPU](/assets/convolution_output_cpu.png)
+
+![Convolution output_For_GPU](/assets/convolution_output_gpu.png)
 
