@@ -2,29 +2,33 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <iomanip> // For setting the precision of the output
+#include <iomanip>  // for std::setprecision
 
-using namespace paras; 
+using namespace std;
+using namespace paras;
 
 int main() {
-    // Number of intervals - increase for higher precision
-    const size_t n = 100000000; // 100 million intervals
+    size_t n;
+
+    // Banner
+    cout << "============================================\n";
+    cout << "       APPROXIMATION OF PI USING SYCL       \n";
+    cout << "============================================\n";
+    cout << "Enter number of intervals: ";
+    cin >> n;
+
     const double dx = 1.0 / n;
 
-    // Create a queue 
     sycl::queue q(sycl::default_selector{});
+    cout << "\nSYCL Device Selected:\n>> "
+         << q.get_device().get_info<sycl::info::device::name>()
+         << "\n--------------------------------------------\n";
 
-    std::cout << "Device: "
-              << q.get_device().get_info<sycl::info::device::name>()
-              << std::endl;
-
-    // Buffer to store partial results
-    std::vector<double> results(n, 0.0);
+    vector<double> results(n, 0.0);
 
     {
         sycl::buffer<double, 1> result_buf(results.data(), sycl::range<1>(n));
 
-        // Submit the command group
         q.submit([&](sycl::handler& h) {
             auto result_acc = result_buf.get_access<sycl::access::mode::write>(h);
 
@@ -33,18 +37,17 @@ int main() {
                 result_acc[i] = std::sqrt(1.0 - x * x) * dx;
             });
         });
-    } // buffer goes out of scope and syncs automatically
+    }
 
-    // Accumulate the result
     double pi = 0.0;
     for (const auto& val : results) {
         pi += val;
     }
     pi *= 4.0;
 
-    // Output the approximation with 10 decimal places
     std::cout << std::fixed << std::setprecision(10)
-              << "Approximation of Pi: " << pi << std::endl;
+              << "Approximation of Pi: " << pi << "\n";
+    std::cout << "============================================\n";
 
     return 0;
 }
