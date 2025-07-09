@@ -1,4 +1,4 @@
-# SCA 2025 Tutorial
+# SCA 2026 Tutorial
 ---
 
 This repository contains the materials which are used / will be used for the SYCL tutorials being held during SCA 2026.
