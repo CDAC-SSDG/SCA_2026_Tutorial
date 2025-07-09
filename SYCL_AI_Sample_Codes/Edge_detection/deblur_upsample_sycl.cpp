@@ -14,7 +14,7 @@ int main() {
     int width, height, channels;
 
     // Load grayscale image
-    unsigned char* input = stbi_load("input.png", &width, &height, &channels, 1);
+    unsigned char* input = stbi_load("input1.jpg", &width, &height, &channels, 1);
     if (!input) {
         std::cerr << "Failed to load input image\n";
         return 1;
@@ -64,7 +64,7 @@ int main() {
         q.wait();
     }
 
-    stbi_write_png("edge_output.png", width, height, 1, output.data(), width);
+    stbi_write_png("edge_output1.jpg", width, height, 1, output.data(), width);
     stbi_image_free(input);
     std::cout << "Saved edge_output.png\n";
 
