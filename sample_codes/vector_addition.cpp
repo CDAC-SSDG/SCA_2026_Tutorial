@@ -1,54 +1,79 @@
 #include <sycl.hpp>
-#include <math.h>
 #include <iostream>
 #include <vector>
+#include <iomanip>  // for setw()
 
-using namespace paras;  
-
-constexpr size_t N = 10;
+using namespace std;
+using namespace paras;
 
 int main() {
-    // Create a SYCL queue 
-    sycl::queue myQueue{sycl::default_selector{}};
+    size_t N;
 
-    std::cout << "Device: " 
-              << myQueue.get_device().get_info<sycl::info::device::name>() 
-              << std::endl;
+    
+    cout << "============================================\n";
+    cout << "         SYCL VECTOR ADDITION PROGRAM       \n";
+    cout << "============================================\n";
+
+    // Take vector size input from user
+    cout << "Enter the size of vectors: ";
+    cin >> N;
+
+    if (N <= 0) {
+        cerr << "Error: Vector size must be greater than 0.\n";
+        return EXIT_FAILURE;
+    }
+
+    // Create SYCL queue
+    sycl::queue myQueue{sycl::default_selector{}};
+    cout << "\nSYCL Device Selected : "
+         << myQueue.get_device().get_info<sycl::info::device::name>()
+         << "\n--------------------------------------------\n";
 
     // Host vectors
-    std::vector<int> A(N, 1);
-    std::vector<int> B(N, 2);
-    std::vector<int> C(N, 0);
+    vector<int> A(N, 1);  // All elements = 1
+    vector<int> B(N, 2);  // All elements = 2
+    vector<int> C(N, 0);  // Result vector
 
-    // SYCL buffers
+    // Print input vectors
+    cout << "\nInput Vector A  : [ ";
+    for (size_t i = 0; i < N; ++i)
+        cout << setw(2) << A[i] << " ";
+    cout << "]\n";
+
+    cout << "Input Vector B  : [ ";
+    for (size_t i = 0; i < N; ++i)
+        cout << setw(2) << B[i] << " ";
+    cout << "]\n";
+
+    // Create SYCL buffers
     sycl::buffer<int, 1> bufferA(A.data(), sycl::range<1>(N));
     sycl::buffer<int, 1> bufferB(B.data(), sycl::range<1>(N));
     sycl::buffer<int, 1> bufferC(C.data(), sycl::range<1>(N));
 
     // Submit the kernel
     myQueue.submit([&](sycl::handler& cgh) {
-        // Accessors
         auto accessorA = bufferA.get_access<sycl::access::mode::read>(cgh);
         auto accessorB = bufferB.get_access<sycl::access::mode::read>(cgh);
         auto accessorC = bufferC.get_access<sycl::access::mode::write>(cgh);
 
-        // Vector addition kernel
         cgh.parallel_for<class VectorAddition>(
-            sycl::range<1>(N), [=](sycl::id<1> index) {
-                accessorC[index] = accessorA[index] + accessorB[index];
+            sycl::range<1>(N), [=](sycl::id<1> idx) {
+                accessorC[idx] = accessorA[idx] + accessorB[idx];
             });
     });
 
-    // Wait for completion
-    myQueue.wait();
+    myQueue.wait();  // Ensure kernel execution finishes
 
-    // Read result back on host
-    auto D = bufferC.get_access<sycl::access::mode::read>();
+    // Access result vector from buffer
+    auto resultAcc = bufferC.get_access<sycl::access::mode::read>();
 
-    std::cout << "Result after vector addition:" << std::endl;
-    for (size_t i = 0; i < N; ++i) {
-        std::cout << "C[" << i << "] = " << D[i] << "\n";
-    }
+    // Print result vector
+    cout << "\nResult Vector   : [ ";
+    for (size_t i = 0; i < N; ++i)
+        cout << setw(2) << resultAcc[i] << " ";
+    cout << "]\n";
+
+    cout << "============================================\n";
 
     return 0;
 }
