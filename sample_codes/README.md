@@ -9,7 +9,7 @@ Description: Compute dot product of two vectors
 
 Sample Output:
 
-![Dot_Product_Output_For_CPU](/assets/dot_product_output_cpu.png)
+![Dot_Product_Output_For_CPU](sample_codes/assets/dot_product_output_cpu.png)
 
 ![Dot_Product_Output_For_GPU](/assets/dot_product_output_gpu.png)
 
