@@ -9,7 +9,9 @@ Description: Compute dot product of two vectors
 
 Sample Output:
 
-![](/assets/dot_product_output.png)
+![](/assets/dot_product_output_cpu.png)
+
+![](/assets/dot_product_output_gpu.png)
 
 ## [Matrix Multiplication](matrix_multiplication.cpp)
 
