@@ -9,17 +9,17 @@ This code can be compiled using the ParaS compiler for both CPU and GPU targets 
 
 For any CPUs:
 
-parascc image_thresholding_sycl.cpp -o thresholding \`pkg-config --cflags --libs opencv4\
+`parascc image_thresholding_sycl.cpp -o thresholding \`pkg-config --cflags --libs opencv4\``
 
 ### For GPUs
 
 For CUDA Enabled NVIDIA GPU:
 
-parascc image_thresholding_sycl.cpp -o thresholding -parasdevice cuda:sm_<x> \`pkg-config --cflags --libs opencv4\
+`parascc image_thresholding_sycl.cpp -o thresholding -parasdevice cuda:sm_<x> \`pkg-config --cflags --libs opencv4\``
 
 For HIP Enabled AMD GPU:
 
-parascc image_thresholding_sycl.cpp -o thresholding -parasdevice hip:gfx<x> \`pkg-config --cflags --libs opencv4\
+`parascc image_thresholding_sycl.cpp -o thresholding -parasdevice hip:gfx<x> \`pkg-config --cflags --libs opencv4\``
 
 ## Expected Output
 
