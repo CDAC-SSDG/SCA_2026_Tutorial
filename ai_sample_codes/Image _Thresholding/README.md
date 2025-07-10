@@ -25,16 +25,16 @@ parascc image_thresholding_sycl.cpp -o thresholding -parasdevice hip:gfx<x> \`pk
 
 **Input 1:**
 
-<img src="input_img1.png" alt="Input 1" width="300"/>
+<img src="input_img1.png" alt="Input 1" width="400"/>
 
 **Output 1:**
 
-<img src="output_img_1.png" alt="Output 1" width="300"/>
+<img src="output_img_1.png" alt="Output 1" width="400"/>
 
 **Input 2:**
 
-<img src="input_img_2.png" alt="Input 2" width="300"/>
+<img src="input_img_2.png" alt="Input 2" width="400"/>
 
 **Output 2:**
 
-<img src="output_img_2.png" alt="Output 2" width="300"/>
+<img src="output_img_2.png" alt="Output 2" width="400"/>
