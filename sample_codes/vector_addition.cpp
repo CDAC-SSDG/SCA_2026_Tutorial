@@ -1,7 +1,10 @@
 #include <sycl.hpp>
 #include <iostream>
 #include <vector>
-#include <iomanip>  // for setw()
+#include <fstream>
+#include <iomanip>   // for setw()
+#include <cstdlib>   // for rand(), srand()
+#include <ctime>     // for time()
 
 using namespace std;
 using namespace paras;
@@ -9,7 +12,6 @@ using namespace paras;
 int main() {
     size_t N;
 
-    
     cout << "============================================\n";
     cout << "         SYCL VECTOR ADDITION PROGRAM       \n";
     cout << "============================================\n";
@@ -23,27 +25,21 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    // Seed random generator
+    srand(static_cast<unsigned>(time(0)));
+
     // Create SYCL queue
     sycl::queue myQueue{sycl::default_selector{}};
     cout << "\nSYCL Device Selected : "
          << myQueue.get_device().get_info<sycl::info::device::name>()
          << "\n--------------------------------------------\n";
 
-    // Host vectors
-    vector<int> A(N, 1);  // All elements = 1
-    vector<int> B(N, 2);  // All elements = 2
-    vector<int> C(N, 0);  // Result vector
-
-    // Print input vectors
-    cout << "\nInput Vector A  : [ ";
-    for (size_t i = 0; i < N; ++i)
-        cout << setw(2) << A[i] << " ";
-    cout << "]\n";
-
-    cout << "Input Vector B  : [ ";
-    for (size_t i = 0; i < N; ++i)
-        cout << setw(2) << B[i] << " ";
-    cout << "]\n";
+    // Host vectors with random values
+    vector<int> A(N), B(N), C(N, 0);
+    for (size_t i = 0; i < N; ++i) {
+        A[i] = rand() % 100;
+        B[i] = rand() % 100;
+    }
 
     // Create SYCL buffers
     sycl::buffer<int, 1> bufferA(A.data(), sycl::range<1>(N));
@@ -67,13 +63,38 @@ int main() {
     // Access result vector from buffer
     auto resultAcc = bufferC.get_access<sycl::access::mode::read>();
 
-    // Print result vector
-    cout << "\nResult Vector   : [ ";
-    for (size_t i = 0; i < N; ++i)
-        cout << setw(2) << resultAcc[i] << " ";
-    cout << "]\n";
+    // Write output to file
+    string outputFileName = "vector_addition_output.dat";
+    ofstream outFile(outputFileName);
+    if (outFile.is_open()) {
+        outFile << "============================================\n";
+        outFile << "         SYCL VECTOR ADDITION PROGRAM       \n";
+        outFile << "============================================\n";
+        outFile << "Vector Size     : " << N << "\n";
 
-    cout << "============================================\n";
+        outFile << "Input Vector A  : [ ";
+        for (size_t i = 0; i < N; ++i)
+            outFile << setw(3) << A[i] << " ";
+        outFile << "]\n";
+
+        outFile << "Input Vector B  : [ ";
+        for (size_t i = 0; i < N; ++i)
+            outFile << setw(3) << B[i] << " ";
+        outFile << "]\n";
+
+        outFile << "Result Vector   : [ ";
+        for (size_t i = 0; i < N; ++i)
+            outFile << setw(3) << resultAcc[i] << " ";
+        outFile << "]\n";
+
+        outFile << "============================================\n";
+        outFile.close();
+
+        // Console notification
+        cout << "\nOutput successfully written to: " << outputFileName << "\n";
+    } else {
+        cerr << "Error: Unable to open output file.\n";
+    }
 
     return 0;
 }
