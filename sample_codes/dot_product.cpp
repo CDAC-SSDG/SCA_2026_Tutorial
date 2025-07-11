@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <sycl.hpp>
+#include <fstream>
+#include <cstdlib>
+#include <ctime>
 
 using namespace paras;
 
@@ -15,23 +18,19 @@ int main() {
 
     // Create SYCL queue
     sycl::queue q(sycl::default_selector{});
-    std::cout << "SYCL Device Selected:\n>> " 
-              << q.get_device().get_info<sycl::info::device::name>() 
+    std::cout << "SYCL Device Selected:\n>> "
+              << q.get_device().get_info<sycl::info::device::name>()
               << "\n------------------------------\n";
 
-    // Initialize vectors
-    std::vector<float> a(N, 1.0f);
-    std::vector<float> b(N, 2.0f);
+    // Initialize vectors with random data
+    std::srand(static_cast<unsigned>(std::time(0)));
+    std::vector<float> a(N), b(N);
+    for (int i = 0; i < N; ++i) {
+        a[i] = static_cast<float>(std::rand() % 100);
+        b[i] = static_cast<float>(std::rand() % 100);
+    }
+
     float result = 0.0f;
-
-    // Print input vectors
-    std::cout << "Vector A: [ ";
-    for (int i = 0; i < N; ++i) std::cout << a[i] << " ";
-    std::cout << "]\n";
-
-    std::cout << "Vector B: [ ";
-    for (int i = 0; i < N; ++i) std::cout << b[i] << " ";
-    std::cout << "]\n------------------------------\n";
 
     // Create buffers
     sycl::buffer<float, 1> a_buf(a.data(), sycl::range<1>(N));
@@ -52,11 +51,31 @@ int main() {
             });
     }).wait();
 
-    // Output result
-    auto host_result = result_buf.get_access<sycl::access::mode::read>();
-    std::cout << "Dot Product Result: " << host_result[0] << std::endl;
-    std::cout << "==============================\n";
+    // Save input and result to .dat file
+    std::string filename = "dot_product_output.dat";
+    std::ofstream outFile(filename);
+    if (outFile.is_open()) {
+        outFile << "DOT PRODUCT USING SYCL\n";
+        outFile << "Vector Size: " << N << "\n\n";
 
+        outFile << "Vector A: [ ";
+        for (int i = 0; i < N; ++i) outFile << a[i] << " ";
+        outFile << "]\n";
+
+        outFile << "Vector B: [ ";
+        for (int i = 0; i < N; ++i) outFile << b[i] << " ";
+        outFile << "]\n\n";
+
+        auto host_result = result_buf.get_access<sycl::access::mode::read>();
+        outFile << "Dot Product Result: " << host_result[0] << "\n";
+
+        outFile.close();
+        std::cout << "Output successfully stored in: " << filename << "\n";
+    } else {
+        std::cerr << "Error: Unable to write output to file.\n";
+    }
+
+    std::cout << "==============================\n";
     return 0;
 }
 
