@@ -1,6 +1,7 @@
 #include <sycl.hpp>
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include <cstdlib>
 #include <ctime>
 
@@ -15,24 +16,30 @@ int main() {
     cout << "Enter the size of square matrices (N x N): ";
     cin >> N;
 
+    if (N <= 0) {
+        cerr << "Error: Size must be greater than 0.\n";
+        return EXIT_FAILURE;
+    }
+
     sycl::queue q1(sycl::default_selector{});
-    cout << "\n>> Running on device: " << q1.get_device().get_info<sycl::info::device::name>() << "\n";
+    cout << "\n>> Running on device: " 
+         << q1.get_device().get_info<sycl::info::device::name>() << "\n";
 
     srand(time(0));
 
     vector<vector<int>> A(N, vector<int>(N));
     vector<vector<int>> B(N, vector<int>(N));
-    vector<vector<int>> C(N, vector<int>(N));
+    vector<vector<int>> C(N, vector<int>(N, 0));
 
-    // Initialize matrices A and B with random values
+    // Initialize A and B with random values
     for (int i = 0; i < N; i++)
         for (int j = 0; j < N; j++) {
             A[i][j] = rand() % 10;
             B[i][j] = rand() % 10;
         }
 
-    // Flatten matrices for SYCL buffer
-    vector<int> flatA(N * N), flatB(N * N), flatC(N * N);
+    // Flatten matrices for buffer use
+    vector<int> flatA(N * N), flatB(N * N), flatC(N * N, 0);
     for (int i = 0; i < N; ++i)
         for (int j = 0; j < N; ++j) {
             flatA[i * N + j] = A[i][j];
@@ -44,7 +51,7 @@ int main() {
     sycl::buffer<int, 2> bufferB(flatB.data(), sycl::range<2>(N, N));
     sycl::buffer<int, 2> bufferC(flatC.data(), sycl::range<2>(N, N));
 
-    // Kernel for matrix multiplication
+    // SYCL kernel for matrix multiplication
     q1.submit([&](sycl::handler& cgh) {
         auto a = bufferA.get_access<sycl::access::mode::read>(cgh);
         auto b = bufferB.get_access<sycl::access::mode::read>(cgh);
@@ -62,7 +69,7 @@ int main() {
 
     q1.wait();
 
-    // Copy results back to matrix C
+    // Copy result to C
     {
         sycl::host_accessor accC(bufferC, sycl::read_only);
         for (int i = 0; i < N; i++)
@@ -70,33 +77,45 @@ int main() {
                 C[i][j] = accC[i][j];
     }
 
-    // Display matrices
-    cout << "\n------------------------------------------\n";
-    cout << "Matrix A:\n";
-    for (int i = 0; i < N; i++) {
-        cout << "\t";
-        for (int j = 0; j < N; j++)
-            cout << A[i][j] << " ";
-        cout << "\n";
-    }
+    // Write everything to output file
+    string outputFile = "matrix_multiplication_output.dat";
+    ofstream out(outputFile);
+    if (out.is_open()) {
+        out << "==========================================\n";
+        out << "   MATRIX MULTIPLICATION USING SYCL\n";
+        out << "==========================================\n";
+        out << "Matrix Size: " << N << " x " << N << "\n\n";
 
-    cout << "\nMatrix B:\n";
-    for (int i = 0; i < N; i++) {
-        cout << "\t";
-        for (int j = 0; j < N; j++)
-            cout << B[i][j] << " ";
-        cout << "\n";
-    }
+        out << "Matrix A:\n";
+        for (int i = 0; i < N; i++) {
+            out << "\t";
+            for (int j = 0; j < N; j++)
+                out << A[i][j] << " ";
+            out << "\n";
+        }
 
-    cout << "\nMatrix C = A x B:\n";
-    for (int i = 0; i < N; i++) {
-        cout << "\t";
-        for (int j = 0; j < N; j++)
-            cout << C[i][j] << " ";
-        cout << "\n";
-    }
+        out << "\nMatrix B:\n";
+        for (int i = 0; i < N; i++) {
+            out << "\t";
+            for (int j = 0; j < N; j++)
+                out << B[i][j] << " ";
+            out << "\n";
+        }
 
-    cout << "------------------------------------------\n";
+        out << "\nMatrix C = A x B:\n";
+        for (int i = 0; i < N; i++) {
+            out << "\t";
+            for (int j = 0; j < N; j++)
+                out << C[i][j] << " ";
+            out << "\n";
+        }
+
+        out << "==========================================\n";
+        out.close();
+        cout << "Output successfully written to: " << outputFile << "\n";
+    } else {
+        cerr << "Error writing output to file.\n";
+    }
 
     return 0;
 }
