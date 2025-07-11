@@ -9,17 +9,17 @@ This code can be compiled using the ParaS compiler for both CPU and GPU targets 
 
 For any CPUs:
 
-`parascc image_segmentation_sycl.cpp -o clustering \`pkg-config --cflags --libs opencv4\``
+`parascc image_segmentation_sycl.cpp -o clustering pkg-config --cflags --libs opencv4`
 
-### For GPUs
+### For NVIDIA and AMD GPUs
 
-For CUDA Enabled NVIDIA GPU:
+`parascc image_segmentation_sycl.cpp -o clustering -parasdevice [cuda:sm_<x> / hip:gfx<x>] pkg-config --cflags --libs opencv4`
 
-`parascc image_segmentation_sycl.cpp -o clustering -parasdevice cuda:sm_<x> \`pkg-config --cflags --libs opencv4\``
+> [!NOTE]  
+> For AMD GPUs use `hip:gfx<x>`  
+> For NVIDIA GPUs use `cuda:sm_<x>`  
+> where x is the compute capability of GPU device.
 
-For HIP Enabled AMD GPU:
-
-`parascc image_segmentation_sycl.cpp -o clustering -parasdevice hip:gfx<x> \`pkg-config --cflags --libs opencv4\``
 
 ## Expected Output
 
