@@ -11,15 +11,17 @@ For any CPUs:
 
 `parascc deblur_upsample_sycl.cpp `
 
-### For GPUs
+### For NVIDIA and AMD GPUs
 
-For CUDA Enabled NVIDIA GPU:
+`parascc deblur_upsample_sycl.cpp -parasdevice [cuda:sm_<x> / hip:gfx<x>]`
 
-`parascc deblur_upsample_sycl.cpp -parasdevice cuda:sm_<x>`
+> [!NOTE]
+> For AMD GPUs use `hip:gfx\<x\>`
+>
+> For NVIDIA GPUs use `cuda:sm_\<x\>`
+>
+> where x is the compute capability of GPU device
 
-For HIP Enabled AMD GPU:
-
-`parascc deblur_upsample_sycl.cpp -parasdevice hip:gfx<x>`
 
 ## Expected Output
 
