@@ -1,6 +1,9 @@
 #include <sycl.hpp>
 #include <iostream>
 #include <vector>
+#include <fstream>
+#include <cstdlib>  // for rand() and srand()
+#include <ctime>    // for time()
 
 using namespace std;
 using namespace paras;
@@ -17,10 +20,11 @@ int main() {
     cin >> height;
     cout << "--------------------------------------------\n";
 
-    // Initialize image matrix
+    // Initialize image matrix with random values
+    srand(time(0));
     vector<int> image(width * height);
     for (size_t i = 0; i < width * height; ++i)
-        image[i] = i + 1;
+        image[i] = rand() % 256; // Random value between 0–255
 
     // Sobel kernel (horizontal edge detection)
     const vector<int> kernel = {
@@ -73,22 +77,19 @@ int main() {
     // Access result
     auto hostResult = resultBuffer.get_access<sycl::access::mode::read>();
 
-    // Display original image
-    cout << "Image Matrix:\n";
-    for (size_t i = 0; i < height; ++i) {
-        cout << "\t";
-        for (size_t j = 0; j < width; ++j)
-            cout << image[i * width + j] << "\t";
-        cout << "\n";
-    }
-
-    // Display result
-    cout << "\nSobel Convolution Result:\n";
-    for (size_t i = 0; i < height; ++i) {
-        cout << "\t";
-        for (size_t j = 0; j < width; ++j)
-            cout << hostResult[i * width + j] << "\t";
-        cout << "\n";
+    // Save result to file
+    ofstream outFile("sobel_output.dat");
+    if (outFile.is_open()) {
+        outFile << "Sobel Convolution Output (" << width << "x" << height << "):\n";
+        for (size_t i = 0; i < height; ++i) {
+            for (size_t j = 0; j < width; ++j)
+                outFile << hostResult[i * width + j] << " ";
+            outFile << "\n";
+        }
+        outFile.close();
+        cout << "Result stored in 'sobel_output.dat'\n";
+    } else {
+        cerr << "Unable to open file for writing!\n";
     }
 
     cout << "============================================\n";
