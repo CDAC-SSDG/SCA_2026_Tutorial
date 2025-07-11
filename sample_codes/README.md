@@ -1,6 +1,7 @@
 # README
 ---
 This directory contains sycl sample codes.
+
 ## Compilation
 
 ### For Any CPUs
@@ -9,54 +10,26 @@ This directory contains sycl sample codes.
 
 ### For NVIDIA and AMD GPUs
 
-`parascc <program.cpp> -parasdevice cuda:sm_<x>/hip:gxf_<x>`
+`parascc <program.cpp> -parasdevice [cuda:sm_<x> / hip:gfx<x>]`
 
+> [!NOTE]
+> For AMD GPUs use `hip:gfx\<x\>`
+>
+> For NVIDIA GPUs use `cuda:sm_\<x\>`
+>
+> where x is the compute capability of GPU device
 
- [Dot Product](dot_product.cpp)
+## Codes 
 
-Description: Compute dot product of two vectors
+The following sample codes are provided
 
-Sample Output:
+ + [Dot Product](dot_product.cpp): Compute dot product of two vectors
 
++ [Matrix Multiplication](matrix_multiplication.cpp): Multiplies two square matrices by taking number of rows as command line arguments
 
-## [Matrix Multiplication](matrix_multiplication.cpp)
++ [Vector Addition](vector_addition.cpp): Adds two vectors and displays the resultant
 
-**Description:** Multiplies two square matrices by taking number of rows as command line arguments
++ [PI Calculation](pi_calculation.cpp): Calculates the value of PI using monte-carlo method
 
-**Sample Output:**
-
-
-
-## [Vector Addition](vector_addition.cpp)
-
-**Description:** Adds two vectors and displays the resultant
-
-**Sample Output**
-
-
-
-
-## [PI Calculation](pi_calculation.cpp)
-
-**Description:** Calculates the value of PI using monte-carlo method
-
-**Sample Output**
-
-
-
-
-## Heat Equation
-
-**Description:** Calculate the heat transfer Equation using sycl
-
-**Sample Output**
-
-
-## Convolution
-
-**Description:** This code computes the convolution using sycl
-
-**Sample Output**
-
-
++ [Convolution](convolution.cpp): This code computes the convolution using sycl
 
