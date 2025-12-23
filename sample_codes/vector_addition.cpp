@@ -1,101 +1,71 @@
-#include <sycl.hpp>
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <iomanip>   // for setw()
-#include <cstdlib>   // for rand(), srand()
-#include <ctime>     // for time()
 
+// ================================================================
+//                 VECTOR ADDITION USING SYCL (USM) 
+// ================================================================
+
+#include <sycl/sycl.hpp>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <iomanip>   // for setw()
+
+using namespace sycl;
 using namespace std;
-using namespace paras;
 
 int main() {
+
     size_t N;
-
-    cout << "============================================\n";
-    cout << "         SYCL VECTOR ADDITION PROGRAM       \n";
-    cout << "============================================\n";
-
-    // Take vector size input from user
-    cout << "Enter the size of vectors: ";
+    cout << "Enter size of vectors: ";
     cin >> N;
 
-    if (N <= 0) {
-        cerr << "Error: Vector size must be greater than 0.\n";
-        return EXIT_FAILURE;
-    }
+    srand(time(nullptr));
 
-    // Seed random generator
-    srand(static_cast<unsigned>(time(0)));
+    queue q{ cpu_selector_v };
+    cout << "\nSYCL Device: "
+         << q.get_device().get_info<info::device::name>() << "\n\n";
 
-    // Create SYCL queue
-    sycl::queue myQueue{sycl::default_selector{}};
-    cout << "\nSYCL Device Selected : "
-         << myQueue.get_device().get_info<sycl::info::device::name>()
-         << "\n--------------------------------------------\n";
+    int* A = malloc_shared<int>(N, q);
+    int* B = malloc_shared<int>(N, q);
+    int* C = malloc_shared<int>(N, q);
 
-    // Host vectors with random values
-    vector<int> A(N), B(N), C(N, 0);
-    for (size_t i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; i++) {
         A[i] = rand() % 100;
         B[i] = rand() % 100;
     }
 
-    // Create SYCL buffers
-    sycl::buffer<int, 1> bufferA(A.data(), sycl::range<1>(N));
-    sycl::buffer<int, 1> bufferB(B.data(), sycl::range<1>(N));
-    sycl::buffer<int, 1> bufferC(C.data(), sycl::range<1>(N));
-
-    // Submit the kernel
-    myQueue.submit([&](sycl::handler& cgh) {
-        auto accessorA = bufferA.get_access<sycl::access::mode::read>(cgh);
-        auto accessorB = bufferB.get_access<sycl::access::mode::read>(cgh);
-        auto accessorC = bufferC.get_access<sycl::access::mode::write>(cgh);
-
-        cgh.parallel_for<class VectorAddition>(
-            sycl::range<1>(N), [=](sycl::id<1> idx) {
-                accessorC[idx] = accessorA[idx] + accessorB[idx];
-            });
+    q.submit([&](handler& cgh) {
+        cgh.parallel_for<class vec_add>(range<1>(N), [=](id<1> idx) {
+            C[idx] = A[idx] + B[idx];
+        });
     });
+    q.wait();
 
-    myQueue.wait();  // Ensure kernel execution finishes
+    // ===================== ALIGNED TABLE OUTPUT ======================
+    cout << "====================== VECTOR ADDITION RESULT ======================\n\n";
 
-    // Access result vector from buffer
-    auto resultAcc = bufferC.get_access<sycl::access::mode::read>();
+    cout << left
+         << setw(7)  << "Index"
+         << setw(10) << "A[i]"
+         << setw(10) << "B[i]"
+         << setw(15) << "C[i] = A+B"
+         << "\n";
 
-    // Write output to file
-    string outputFileName = "vector_addition_output.dat";
-    ofstream outFile(outputFileName);
-    if (outFile.is_open()) {
-        outFile << "============================================\n";
-        outFile << "         SYCL VECTOR ADDITION PROGRAM       \n";
-        outFile << "============================================\n";
-        outFile << "Vector Size     : " << N << "\n";
+    cout << "--------------------------------------------------------------\n";
 
-        outFile << "Input Vector A  : [ ";
-        for (size_t i = 0; i < N; ++i)
-            outFile << setw(3) << A[i] << " ";
-        outFile << "]\n";
-
-        outFile << "Input Vector B  : [ ";
-        for (size_t i = 0; i < N; ++i)
-            outFile << setw(3) << B[i] << " ";
-        outFile << "]\n";
-
-        outFile << "Result Vector   : [ ";
-        for (size_t i = 0; i < N; ++i)
-            outFile << setw(3) << resultAcc[i] << " ";
-        outFile << "]\n";
-
-        outFile << "============================================\n";
-        outFile.close();
-
-        // Console notification
-        cout << "\nOutput successfully written to: " << outputFileName << "\n";
-    } else {
-        cerr << "Error: Unable to open output file.\n";
+    for (size_t i = 0; i < N; i++) {
+        cout << left
+             << setw(7)  << i
+             << setw(10) << A[i]
+             << setw(10) << B[i]
+             << setw(15) << C[i]
+             << "\n";
     }
+
+    cout << "--------------------------------------------------------------\n";
+
+    free(A, q);
+    free(B, q);
+    free(C, q);
 
     return 0;
 }
-
