@@ -1,71 +1,64 @@
-#include <sycl.hpp>
+// ============================================================================
+//                  π APPROXIMATION USING SYCL PARALLEL INTEGRATION (USM)
+// 
+//   Method:
+//      π = 4 * ∫₀¹ sqrt(1 - x²) dx
+//
+//   Using Riemann Sum with N intervals computed in parallel on SYCL device.
+// ============================================================================
+
+#include <sycl/sycl.hpp>
 #include <iostream>
-#include <vector>
 #include <cmath>
 #include <iomanip>
-#include <fstream>
 
-using namespace paras;
+using namespace sycl;
+using namespace std;
 
 int main() {
-    size_t n;
 
-    std::cout << "============================================\n";
-    std::cout << "       APPROXIMATION OF PI USING SYCL       \n";
-    std::cout << "============================================\n";
-    std::cout << "Enter number of intervals: ";
-    std::cin >> n;
-
-    if (n <= 0) {
-        std::cerr << "Error: Number of intervals must be greater than 0.\n";
-        return EXIT_FAILURE;
-    }
-
+    // Number of intervals (increase for higher accuracy)
+    const size_t n = 100000000;   // 100 million intervals
     const double dx = 1.0 / n;
 
-    sycl::queue q(sycl::default_selector{});
-    std::cout << "\nSYCL Device Selected:\n>> "
-              << q.get_device().get_info<sycl::info::device::name>()
-              << "\n--------------------------------------------\n";
+    // Select device
+    queue q;
+    cout << "SYCL Device: "
+         << q.get_device().get_info<info::device::name>() << "\n\n";
 
-    std::vector<double> results(n, 0.0);
+    // Allocate USM shared memory
+    double* results = malloc_shared<double>(n, q);
 
-    {
-        sycl::buffer<double, 1> result_buf(results.data(), sycl::range<1>(n));
+    // Initialize (optional)
+    for (size_t i = 0; i < n; i++)
+        results[i] = 0.0;
 
-        q.submit([&](sycl::handler& h) {
-            auto result_acc = result_buf.get_access<sycl::access::mode::write>(h);
-
-            h.parallel_for<class ComputePi>(sycl::range<1>(n), [=](sycl::id<1> i) {
-                double x = (i[0] + 0.5) * dx;
-                result_acc[i] = std::sqrt(1.0 - x * x) * dx;
-            });
+    // Submit kernel
+    q.submit([&](handler& h) {
+        h.parallel_for<class pi_kernel_usm>(range<1>(n), [=](id<1> i) {
+            size_t idx = i[0];
+            double x = (idx + 0.5) * dx;
+            results[idx] = sycl::sqrt(1.0 - x * x) * dx;
         });
-    }
+    });
 
+    // Wait for kernel to finish
+    q.wait();
+
+    // Compute π on host
     double pi = 0.0;
-    for (const auto& val : results)
-        pi += val;
+    for (size_t i = 0; i < n; i++)
+        pi += results[i];
+
     pi *= 4.0;
 
-    // Write result to file
-    std::string outputFile = "pi_output.dat";
-    std::ofstream out(outputFile);
-    if (out.is_open()) {
-        out << "============================================\n";
-        out << "       APPROXIMATION OF PI USING SYCL       \n";
-        out << "============================================\n";
-        out << "Number of Intervals : " << n << "\n";
-        out << std::fixed << std::setprecision(10)
-            << "Approximated Pi     : " << pi << "\n";
-        out << "============================================\n";
-        out.close();
+    // Free USM memory
+    free(results, q);
 
-        std::cout << "Output successfully stored in: " << outputFile << "\n";
-    } else {
-        std::cerr << "Error: Unable to write to file.\n";
-    }
+    // Print result
+    cout << fixed << setprecision(10);
+    cout << "Intervals used      :  " << n << "\n";
+    cout << "Approximation of π  :  " << pi << "\n";
 
     return 0;
 }
-
