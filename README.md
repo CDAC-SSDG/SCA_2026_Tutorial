@@ -5,7 +5,7 @@ This repository contains the materials which are used / will be used for the SYC
 
 ## Directory structure
 
-+ **ai_sample_codes:** Contains SYCL based codes for AI applications
++ **Module 1-4:** These modules introduce SYCL basics, device selection, USM-based memory management, and kernel execution
 + **sample_codees:** Contains SYCL based sample applications
 + **reference_material:** Contains reference materials (slides/SYCL reference card)
 + **assets:** Contains images and other assets being used in the README files of the repository
