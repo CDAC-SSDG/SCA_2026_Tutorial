@@ -23,7 +23,7 @@ This directory contains sycl sample codes.
 
 The following sample codes are provided
 
- + [Dot Product](dot_product.cpp): Compute dot product of two vectors
+ + [Heat_Equation](heat_equation.cpp): The heat equation describes how heat spreads over time through a material.
 
 + [Matrix Multiplication](matrix_multiplication.cpp): Multiplies two square matrices by taking number of rows as command line arguments
 
